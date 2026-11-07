@@ -108,6 +108,8 @@ export function defaultSurvey(floorPlan: string): SurveyDocument {
     apMapping: [],
     testDuration: 5,
     udpTests: false, // TCP only: half the time per spot
+    scanNearby: false,
+    nearbyReports: {},
     nextPointNum: 1,
     dimensions: { width: 100, height: 100 },
     radiusDivider: null,

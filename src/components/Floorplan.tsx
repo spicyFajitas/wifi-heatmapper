@@ -26,6 +26,7 @@ import { Gradient, SurveyPoint } from "@/lib/types";
 import { useMeasurement } from "@/hooks/useMeasurement";
 import { useZoomPan } from "@/hooks/useZoomPan";
 import { cn } from "@/lib/utils";
+import { isScanOnly, strongestNearby } from "@/lib/nearby-networks";
 
 type XY = { x: number; y: number };
 type MarkerSizes = ReturnType<typeof markerSizes>;
@@ -60,6 +61,9 @@ function drawPoint(
   const { R, font, labelOffset, pad } = sizes;
   const wifi = point.wifiData;
   if (!wifi) return;
+  // not connected when measured: show the strongest network the scan heard
+  const scanOnly = isScanOnly(point);
+  const strength = scanOnly ? strongestNearby(point) : wifi.signalStrength;
 
   ctx.save();
   // marker
@@ -67,7 +71,7 @@ function drawPoint(
   ctx.arc(point.x, point.y, R, 0, Math.PI * 2);
   ctx.fillStyle = point.isEnabled
     ? objectToRGBAString({
-        ...getColorAt(wifi.signalStrength / 100, gradient),
+        ...getColorAt(strength / 100, gradient),
         a: 1,
       })
     : "rgba(160, 165, 175, 0.9)";
@@ -86,7 +90,7 @@ function drawPoint(
   }
 
   // label
-  const text = `${wifi.signalStrength}%`;
+  const text = scanOnly ? `Scan ${strength}%` : `${strength}%`;
   ctx.font = `600 ${font}px ui-sans-serif, system-ui, sans-serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
@@ -302,6 +306,7 @@ export default function ClickableFloorplan() {
     iperfServerAdrs: settings.iperfServerAdrs,
     testDuration: settings.testDuration,
     udpTests: settings.udpTests,
+    scanNearby: settings.scanNearby,
     sudoerPassword,
     iperfCommands: settings.iperfCommands,
   });
